@@ -1,5 +1,6 @@
 import { change } from '@/api/password';
 import { isLogged } from '@/utils/auth';
+import { Message } from 'element-ui';
 
 const state = {
   id: null,
@@ -17,9 +18,13 @@ const actions = {
   change({ commit }, passwordInfo) {
     const { id, currentPassword, newPassword, confirmNewPassword } = passwordInfo;
     return new Promise((resolve, reject) => {
-      change(id, { currentPassword: currentPassword, password: newPassword, confirmPassword: confirmNewPassword })
+      change(id, { current_password: currentPassword, new_password: newPassword, confirm_password: confirmNewPassword })
         .then(response => {
-          console.log(response);
+          Message({
+            message: 'Permissions has been updated successfully',
+            type: 'success',
+            duration: 5 * 1000,
+          });
         })
         .catch(error => {
           console.log(error);

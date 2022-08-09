@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Laravue\Models\User;
+use \App\Laravue\JsonResponse;
 use Illuminate\Http\Request;
 use Validator;
+use Auth;
+use Hash;
 
 class PasswordController extends Controller
 {
@@ -53,16 +57,30 @@ class PasswordController extends Controller
             $request->all(),
             array_merge(
                 [
-                    'password' => ['required', 'min:6'],
-                    'confirmPassword' => 'same:password',
+                    'new_password' => ['required', 'min:6'],
+                    'confirm_password' => 'same:new_password',
+                    'current_password' => ['required', function ($attribute, $value, $fail) {
+                        if (!\Hash::check($value, Auth::user()->password)) {
+                            return $fail(__('The current password is incorrect.'));
+                        }
+                    }]
                 ]
             )
         );
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 403);
+            return response()->json(['errors' => $validator->errors()->first()], 403);
         } else {
+            $userId = auth()->user()->id;
 
+            $user = User::find($userId);
+            $user->password = Hash::make($request->new_password);
+
+            if($user->save()){
+                return response()->json(new JsonResponse(['Change password is successfully.']));
+            }else{
+                return response()->json(['error' => 'There is an error while saving.'], 403);
+            }
         }
     }
 
